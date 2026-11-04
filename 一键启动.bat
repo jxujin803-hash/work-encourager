@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-title 上班鼓励器
+title Work Encourager
 
-:: 自动查找 Edge 路径
+:: Find Edge
 set "EDGE_PATH="
 if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
   set "EDGE_PATH=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
@@ -11,15 +11,18 @@ if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
 )
 
 if not defined EDGE_PATH (
-  echo 未找到 Microsoft Edge，请先安装 Edge 浏览器。
+  echo Microsoft Edge not found. Please install Edge browser first.
   pause
   exit /b
 )
 
-:: 获取当前目录下的 HTML 文件路径
-set "HTML_FILE=%~dp0上班鼓励器.html"
+:: Get current folder path
+set "HTML_FILE=%~dp0work-encourager.html"
 
-:: 启动应用模式窗口
-start "" "%EDGE_PATH%" --app="file:///%HTML_FILE:\=/%" --window-size=460,780
+:: Convert backslashes to forward slashes
+set "HTML_URL=%HTML_FILE:\=/%"
+
+:: Launch app window
+start "" "%EDGE_PATH%" --app="file:///%HTML_URL%" --window-size=460,780
 
 exit
