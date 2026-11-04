@@ -48,25 +48,23 @@
 
 ## 使用方法
 
-1. 下载 `上班鼓励器.html` 文件
-2. 双击用浏览器打开（推荐 Chrome / Edge）
+### 快速开始（推荐）
+
+1. 下载全部文件到同一个文件夹
+2. 双击 `一键启动.bat`，自动打开独立应用窗口（无地址栏，像原生应用）
 3. 点右上角齿轮图标，填入你的日薪、工时、上班时间
 4. 把窗口拖到桌面角落，该上班上班
 
-### 打包成桌面应用（Windows）
+### 普通浏览器打开
 
-用 Edge 的应用模式：
+如果不想用 .bat，也可以直接双击 `上班鼓励器.html` 用浏览器打开，功能都一样，只是窗口有地址栏。
 
-```powershell
-# 创建桌面快捷方式
-$WshShell = New-Object -comObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\上班鼓励器.lnk")
-$Shortcut.TargetPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-$Shortcut.Arguments = "--app=file:///C:/path/to/上班鼓励器.html"
-$Shortcut.Save()
-```
+### 手动创建桌面快捷方式（Windows）
 
-双击快捷方式就是一个独立窗口，没有地址栏，像原生应用一样。
+想要桌面图标、开机自启的话：
+
+1. 右键 `一键启动.bat` → 发送到 → 桌面快捷方式
+2. 右键桌面快捷方式 → 属性 → 更改图标，选一个你喜欢的图标
 
 ## 技术栈
 

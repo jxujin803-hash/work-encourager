@@ -979,20 +979,51 @@ function calc(){
   const perSec = workMs > 0 ? effectiveDailySalary / (workMs/1000) : 0;
 
   let state, workedMs, remainMs;
-  if(curMs < startMs){
-    state = "before"; workedMs = 0; remainMs = endMs - curMs;
-  }else if(curMs < endMs){
-    state = "working";
-    // 已过的总时间（含午休）
-    const elapsedTotal = curMs - startMs;
-    // 午休重叠部分：max(0, min(curMs, lunchEndMs) - max(startMs, lunchStartMs))
-    const lunchOverlap = Math.max(0, Math.min(curMs, lunchEndMs) - Math.max(startMs, lunchStartMs));
-    workedMs = elapsedTotal - lunchOverlap;
-    if(workedMs < 0) workedMs = 0;
-    if(workedMs > workMs) workedMs = workMs;
-    remainMs = endMs - curMs;
+  const DAY_MS = 24 * 3600 * 1000;
+  const isOvernight = endMs > DAY_MS; // 是否跨天班（下班时间在第二天）
+
+  if(!isOvernight){
+    // 正常班：当天内完成
+    if(curMs < startMs){
+      state = "before"; workedMs = 0; remainMs = endMs - curMs;
+    }else if(curMs < endMs){
+      state = "working";
+      const elapsedTotal = curMs - startMs;
+      const lunchOverlap = Math.max(0, Math.min(curMs, lunchEndMs) - Math.max(startMs, lunchStartMs));
+      workedMs = elapsedTotal - lunchOverlap;
+      if(workedMs < 0) workedMs = 0;
+      if(workedMs > workMs) workedMs = workMs;
+      remainMs = endMs - curMs;
+    }else{
+      state = "off"; workedMs = workMs; remainMs = 0;
+    }
   }else{
-    state = "off"; workedMs = workMs; remainMs = 0;
+    // 跨天班：下班时间在第二天凌晨
+    const nextDayEndMs = endMs - DAY_MS; // 第二天的下班时间（比如 06:00）
+    if(curMs >= startMs){
+      // 当天上班时间之后，正在上班
+      state = "working";
+      const elapsedTotal = curMs - startMs;
+      const lunchOverlap = Math.max(0, Math.min(curMs, lunchEndMs) - Math.max(startMs, lunchStartMs));
+      workedMs = elapsedTotal - lunchOverlap;
+      if(workedMs < 0) workedMs = 0;
+      if(workedMs > workMs) workedMs = workMs;
+      remainMs = endMs - curMs;
+    }else if(curMs < nextDayEndMs){
+      // 第二天凌晨，昨晚的班还没上完
+      state = "working";
+      // 已工作时间 = 当天从上班到24点 + 从0点到现在
+      const elapsedTotal = (DAY_MS - startMs) + curMs;
+      // 午休重叠：只算当天下午的午休（凌晨不在午休时间内）
+      const lunchOverlap = Math.max(0, Math.min(DAY_MS, lunchEndMs) - Math.max(startMs, lunchStartMs));
+      workedMs = elapsedTotal - lunchOverlap;
+      if(workedMs < 0) workedMs = 0;
+      if(workedMs > workMs) workedMs = workMs;
+      remainMs = nextDayEndMs - curMs;
+    }else{
+      // 第二天凌晨过了下班时间，已下班
+      state = "off"; workedMs = workMs; remainMs = 0;
+    }
   }
 
   const workedSec = workedMs / 1000;
@@ -1366,15 +1397,6 @@ function setMiniMode(on){
     savedWinSize = { w: window.outerWidth, h: window.outerHeight };
     el.mainCard.style.display = "none";
     el.miniView.style.display = "flex";
-    el.miniView.style.alignItems = "center";
-    el.miniView.style.justifyContent = "center";
-    el.miniView.style.position = "fixed";
-    el.miniView.style.top = "0";
-    el.miniView.style.left = "0";
-    el.miniView.style.right = "0";
-    el.miniView.style.bottom = "0";
-    el.miniView.style.borderRadius = "0";
-    el.miniView.style.background = "rgba(255,255,255,0.6)";
     document.body.style.overflow = "hidden";
     try {
       window.resizeTo(280, 44);
@@ -1383,15 +1405,6 @@ function setMiniMode(on){
   }else{
     el.mainCard.style.display = "";
     el.miniView.style.display = "none";
-    el.miniView.style.position = "";
-    el.miniView.style.top = "";
-    el.miniView.style.left = "";
-    el.miniView.style.right = "";
-    el.miniView.style.bottom = "";
-    el.miniView.style.borderRadius = "";
-    el.miniView.style.background = "";
-    el.miniView.style.alignItems = "";
-    el.miniView.style.justifyContent = "";
     document.body.style.overflow = "";
     try {
       if(savedWinSize) window.resizeTo(savedWinSize.w, savedWinSize.h);
